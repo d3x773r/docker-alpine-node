@@ -1,0 +1,70 @@
+version: "2"
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: scape_app
+    volumes:
+      - ./:/home/node/app
+      - /home/node/app/node_modules
+    restart: always
+    # deploy:
+    #   mode: replicated
+    #   replicas: 1
+    #   labels: [APP=APP]
+    #   update_config:
+    #     parallelism: 1
+    #     delay: 10s
+    #   restart_policy:
+    #     condition: on-failure
+    #     delay: 5s
+    ports:
+      - "3007:3000"
+    links:
+      - mongo
+    depends_on:
+      - 'mongo'
+    networks:
+      - mongo-compose-network
+
+  mongo-express:
+    image: mongo-express
+    container_name: scape_mongo_express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: MongoDB2019
+    links:
+      - mongo
+    networks:
+      - mongo-compose-network
+    depends_on:
+      - 'mongo'
+
+  mongo:
+    image: mongo
+    container_name: scape_mongodb
+    # restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: MongoDB2019
+    volumes:
+       - "/data/mongodb/db:/data/db"
+    restart: always
+    command: mongod
+    # command: --serviceExecutor adaptive
+    ports:
+      - "27017:27017"
+      # - /MongoDB:/data/db
+    networks:
+      - mongo-compose-network
+
+networks: 
+    mongo-compose-network:
+      driver: bridge
